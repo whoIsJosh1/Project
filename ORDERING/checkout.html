@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout - 16 Ounces Café</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+  body { display: flex; min-height: 100vh; background: hsl(28, 80%, 98%); color: hsl(25, 40%, 15%); }
+  .container { display: flex; flex: 1; overflow: hidden; }
+  .left-panel { flex: 1; background: hsl(25, 95%, 60%); color: #fff; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; }
+  .back-btn { background: #fff; color: hsl(25, 95%, 60%); border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease; }
+  .back-btn:hover { transform: scale(1.05); }
+  .left-panel h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .left-panel p { font-size: 15px; margin-bottom: 24px; color: #fff; }
+  .payment-options { width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 16px; }
+  .payment-btn { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: #fff; color: hsl(25, 40%, 15%); border: none; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+  .payment-btn:hover { transform: scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .payment-btn span.title { font-weight: 700; display: block; }
+  .payment-btn span.subtitle { font-size: 13px; color: hsl(25, 20%, 50%); display: block; }
+  .right-panel1 { flex: 1; background: #fff; padding: 32px 24px; display: flex; flex-direction: column; border-left: 1px solid hsl(28, 30%, 90%); }
+  .right-panel2 { flex: 1; border: none; display: none; }
+  .order-header { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+  .order-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .order-card { background: hsl(25, 70%, 85%); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .order-card div:first-child { font-weight: 600; }
+  .order-card div:last-child { font-weight: 700; color: hsl(25, 95%, 60%); }
+  .total-bar { background: hsl(28, 35%, 94%); padding: 14px 16px; font-size: 20px; font-weight: 700; text-align: right; border-radius: 12px; margin-top: 12px; }
+  @media (max-width: 900px) { .container { flex-direction: column; } .left-panel, .right-panel1, .right-panel2 { flex: unset; width: 100%; border-left: none; border-top: 1px solid hsl(28, 30%, 90%); } }
+  #paymentOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; }
+  #paymentFrame { width:540px; height:700px; border:none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="left-panel" id="left_panel">
+    <button class="back-btn" onclick="backToConfirm()">←</button>
+    <h2>Choose Your Payment Method</h2>
+    <p>Select one to complete your order.</p>
+    <div class="payment-options">
+      <button class="payment-btn" onclick="payCash()">💵<div><span class="title">Cash</span><span class="subtitle">Pay at the counter.</span></div></button>
+      <button class="payment-btn" onclick="payPayMaya()">📱<div><span class="title">PayMaya</span><span class="subtitle">Scan QR with PayMaya app.</span></div></button>
+      <button class="payment-btn" onclick="payGcash()">📱<div><span class="title">GCash</span><span class="subtitle">Scan QR with GCash app.</span></div></button>
+    </div>
+  </div>
+
+  <div class="right-panel1" id="ord">
+    <div>
+      <div class="order-header">Your Order</div>
+      <div class="order-items" id="checkoutOrderList"></div>
+    </div>
+    <div class="total-bar" id="checkoutTotal">Total: ₱0.00</div>
+  </div>
+</div>
+
+<div id="paymentOverlay">
+  <iframe id="paymentFrame"></iframe>
+</div>
+
+<script>
+let order = JSON.parse(localStorage.getItem('currentOrder') || '{}');
+
+function displayOrder() {
+    const checkoutList = document.getElementById("checkoutOrderList");
+    checkoutList.innerHTML = "";
+    let total = 0;
+    Object.values(order).forEach(item => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+        checkoutList.innerHTML += `<div class="order-card">
+            <div>${item.name}${item.size !== "N/A" ? ` (${item.size}, ${item.temp})` : ""} x${item.quantity}</div>
+            <div>₱${subtotal.toFixed(2)}</div>
+        </div>`;
+    });
+    document.getElementById("checkoutTotal").textContent = "Total: ₱" + total.toFixed(2);
+}
+
+function backToConfirm() { window.location.href = 'menu_page.php'; }
+
+function saveOrderAndRedirect(paymentMethod, callback=null) {
+    const orderData = Object.values(order).map(item => ({
+        product_id: item.product_id || item.id,
+        price: item.price,
+        quantity: item.quantity || item.qty
+    }));
+
+    if(orderData.length === 0){ alert("Your cart is empty!"); return; }
+
+    fetch('save_sale.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: orderData, payment_method: paymentMethod })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            localStorage.setItem('queue_number', data.queue_number);
+            localStorage.setItem('customer_name', data.customer_name);
+            localStorage.removeItem('currentOrder');
+
+            if(callback) callback(); // Open simulator if callback provided
+            else window.location.href = 'successfulEpay.html';
+        } else {
+            alert('Failed to save order: ' + data.message);
+        }
+    })
+    .catch(err => { console.error(err); alert('Something went wrong!'); });
+}
+
+function openPaymentSimulator(method) {
+    const overlay = document.getElementById('paymentOverlay');
+    const frame = document.getElementById('paymentFrame');
+
+    overlay.style.display = 'flex';
+    frame.src = `simulator_gateway.html?method=${method}`;
+    document.querySelectorAll('.payment-btn, .back-btn').forEach(btn => btn.disabled = true);
+
+    function handler(e){
+        if(e.data === 'payment_done'){
+            overlay.style.display = 'none';
+            document.querySelectorAll('.payment-btn, .back-btn').forEach(btn => btn.disabled = false);
+            window.removeEventListener('message', handler);
+            window.location.href = 'index.php'; // Go to home
+        }
+    }
+    window.addEventListener('message', handler);
+}
+
+// Payment buttons
+function payCash() { saveOrderAndRedirect('Cash'); }
+function payPayMaya() { saveOrderAndRedirect('PayMaya', ()=>openPaymentSimulator('PayMaya')); }
+function payGcash() { saveOrderAndRedirect('GCash', ()=>openPaymentSimulator('GCash')); }
+
+displayOrder();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirm Order - 16 Ounces Café</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; font-family:'Arial', sans-serif; }
+  body { background:#fff; }
+
+  .checkout-page { display:flex; min-height:100vh; }
+  
+  /* Left Panel with logo & best sellers */
+.left-panel { 
+    background:#ff914d;
+    color:#fff;
+    flex:1;
+    padding:30px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+/* Logo - rectangular shape */
+.left-panel img.logo { 
+    width:160px;   /* wider for rectangle */
+    height:80px;   /* height smaller than width for rectangle ratio */
+    object-fit:cover; /* ensures image fills the rectangle */
+    margin-bottom:20px; 
+    border-radius:8px; /* subtle rounding for modern look */
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+
+/* Store name */
+.left-panel h1 { 
+    font-size:32px; 
+    margin-bottom:15px; 
+    text-align:center; 
+    letter-spacing:1px; 
+}
+
+/* Best sellers title */
+.left-panel p { 
+    margin-bottom:20px; 
+    font-weight:bold; 
+    font-size:16px;
+    text-transform:uppercase;
+}
+
+/* Best seller images grid */
+.best-sellers {
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:15px;
+    width:100%;
+}
+
+/* Best seller image size increased */
+.best-sellers img {
+    width:100%;
+    height:160px; /* bigger images for better visibility */
+    object-fit:cover;
+    border-radius:14px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.best-sellers img:hover { 
+    transform: scale(1.05); 
+    box-shadow:0 6px 16px rgba(0,0,0,0.35);
+}
+
+
+  /* Right Panel for order */
+  .right-panel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 34px;
+      color: #333;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease;
+    }
+
+    .checkmark {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 8px solid #4CAF50;
+      position: relative;
+      animation: pop 0.6s ease forwards;
+    }
+
+    /* Checkmark animation */
+    .checkmark::after {
+      content: "";
+      position: absolute;
+      width: 45px;
+      height: 90px;
+      border-right: 8px solid #4CAF50;
+      border-bottom: 8px solid #4CAF50;
+      transform: rotate(45deg) scale(0);
+      opacity: 0;
+      animation: draw 0.8s ease forwards;
+      animation-delay: 0.6s;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes draw {
+      0% { transform: rotate(45deg) scale(0); opacity: 0; }
+      100% { transform: rotate(45deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    p {
+      margin-top: 25px;
+      font-size: 20px;
+      color: #555;
+      animation: fadeIn 1.2s ease;
+    }
+
+  /* Small Back button top-left inside right panel */
+  .back-btn {
+    position:absolute;
+    top:15px;
+    left:15px;
+    background:#ff914d;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:5px 10px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+    font-size:13px;
+  }
+  .back-btn:hover { background:#e6833c; transform: scale(1.05); }
+
+  /* Order header */
+  h2 { color:#ff914d; margin-top:35px; margin-bottom:20px; text-align:center; }
+
+  .order-items { flex:1; overflow-y:auto; margin-bottom:15px; }
+  .order-card {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(255,145,77,0.15);
+    padding:12px 15px;
+    border-radius:12px;
+    margin-bottom:10px;
+    font-size:14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .order-card strong { color:#ff914d; }
+  .order-card .delete {
+    background:#ff4d4f;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:2px 6px;
+    cursor:pointer;
+    font-size:12px;
+    transition:0.2s;
+    margin-left:8px;
+  }
+  .order-card .delete:hover { background:#e04344; }
+
+  .summary {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    border-top:2px solid rgba(255,145,77,0.3);
+    padding-top:10px;
+  }
+  .summary .total { font-weight:bold; font-size:16px; color:#ff914d; }
+  .confirm-btn {
+    background:#ff914d;
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:10px 0;
+    font-weight:bold;
+    cursor:pointer;
+    min-width:120px;
+    transition:0.2s;
+  }
+  .confirm-btn:hover { background:#e6833c; }
+
+  .logo-footer { text-align:center; margin-top:15px; font-size:13px; color:#555; }
+
+  @media(max-width:768px){
+    .checkout-page { flex-direction:column; }
+    .left-panel, .right-panel { flex:unset; width:100%; }
+    .best-sellers { grid-template-columns: repeat(3, 1fr); justify-items:center; gap:8px; }
+    .order-card { flex-direction:column; align-items:flex-start; }
+    .order-card div:last-child { margin-top:5px; display:flex; align-items:center; }
+    .summary { flex-direction:column; align-items:flex-start; gap:8px; }
+    .confirm-btn { width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="checkout-page">
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <img src="16 ounces.jpg" class="logo" alt="16 Ounces Café Logo">
+    <h1>16 OUNCES CAFÉ</h1>
+    <p>Best Sellers</p>
+    <div class="best-sellers">
+      <img src="Caramel Macchiato.jpg" alt="Best 1">
+      <img src="Salted Caramel Latte.jpg" alt="Best 2">
+      <img src="Spanish Latte.jpg" alt="Best 3">
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <button class="back-btn" onclick="backToPOS()">⬅ Back</button>
+    <h2>Confirm Your Order</h2>
+    <div class="order-items" id="checkoutOrderList"></div>
+
+    <div class="summary">
+      <div class="total" id="checkoutTotal">TOTAL: ₱0.00</div>
+      <button class="confirm-btn" onclick="confirmOrder()">CONFIRM</button>
+    </div>
+
+    <div class="logo-footer">
+      16 OUNCES CAFÉ - COFFEE AND PASTRY
+    </div>
+  </div>
+</div>
+
+<script>
+let order = JSON.parse(localStorage.getItem('currentOrder') || '{}');
+
+function displayOrder() {
+    const checkoutList = document.getElementById("checkoutOrderList");
+    checkoutList.innerHTML = "";
+    let total = 0;
+    Object.values(order).forEach(item => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+        checkoutList.innerHTML += `
+            <div class="order-card">
+                <div>${item.name} ${item.size !== "N/A" ? `(${item.size}, ${item.temp})` : ""} x${item.quantity}</div>
+                <div>₱${subtotal.toFixed(2)}</div>
+            </div>`;
+    });
+    document.getElementById("checkoutTotal").textContent = "Total: ₱" + total.toFixed(2);
+}
+
+function backToConfirm() { 
+    window.location.href = "confirm_order.html"; 
+}
+
+// ✅ Redirect to successfully.html
+
+function payPayMaya() { 
+    alert("You selected PayMaya. Scan the QR code with PayMaya app."); 
+}
+
+function payGcash() { 
+    alert("You selected GCash. Scan the QR code with GCash app."); 
+}
+
+displayOrder();
+</script>
+
+</body>
+</html>

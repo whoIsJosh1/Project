@@ -1,0 +1,1083 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe POS - Professional Ordering System</title>
+    <meta name="description" content="Modern and intuitive point of sale ordering system for cafes and restaurants">
+    
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --primary: hsl(25, 95%, 60%);
+        --primary-foreground: hsl(0, 0%, 100%);
+        --background: hsl(28, 80%, 98%);
+        --foreground: hsl(25, 40%, 15%);
+        --card: hsl(0, 0%, 100%);
+        --secondary: hsl(30, 40%, 92%);
+        --muted: hsl(30, 35%, 94%);
+        --muted-foreground: hsl(25, 20%, 50%);
+        --success: hsl(142, 71%, 45%);
+        --destructive: hsl(0, 72%, 51%);
+        --border: hsl(28, 30%, 90%);
+        --radius: 12px;
+      }
+
+      html, body {
+        height: 100%;
+        overflow: hidden; /* ❌ Disable scrolling on whole page */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(180deg, hsl(28, 80%, 98%), hsl(30, 70%, 96%));
+        color: var(--foreground);
+      }
+
+
+
+      .container {
+        display: flex;
+        height: 100vh; /* Fixed full height layout */
+        max-width: 100vw;
+        overflow: hidden; /* prevent container from scrolling */
+      }
+
+
+      /* SIDEBAR */
+      .sidebar {
+        width: 260px;
+        background: linear-gradient(135deg, hsl(25, 95%, 60%), hsl(15, 90%, 55%));
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 40;
+      }
+
+      .sidebar h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-foreground);
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .category-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px;
+        border-radius: var(--radius);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--primary-foreground);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .category-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
+
+      .category-btn.active {
+        background: var(--card);
+        color: var(--primary);
+        border-color: var(--card);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: scale(1.05);
+      }
+
+      .category-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .logout-container {
+        margin-top: auto; /* pushes it to the bottom */
+        padding: 16px;
+      }
+
+      .logout-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background-color: hsl(0, 80%, 50%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 0;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .logout-btn:hover {
+        background-color: hsl(0, 70%, 40%);
+      }
+
+
+      /* MAIN CONTENT */
+      .main-content {
+        flex: 1;
+        padding: 32px;
+        overflow-y: auto;
+        height: 100vh;
+      }
+
+      .content-header {
+        margin-bottom: 32px;
+      }
+
+      .content-header h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--foreground);
+        text-transform: capitalize;
+        margin-bottom: 4px;
+      }
+
+      .content-header p {
+        color: var(--muted-foreground);
+        font-size: 15px;
+      }
+
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+      }
+
+      .product-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        animation: scaleIn 0.3s ease-out;
+      }
+
+      .product-card:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
+      }
+
+      .product-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+      }
+
+      .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+
+      .product-card:hover .product-image {
+        transform: scale(1.1);
+      }
+
+      .product-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .product-card:hover .product-overlay {
+        opacity: 1;
+      }
+
+      .product-details {
+        padding: 16px;
+      }
+
+      .product-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--foreground);
+        margin-bottom: 4px;
+      }
+
+      .product-price {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 12px;
+      }
+
+      .product-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .select-input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--background);
+        color: var(--foreground);
+        font-size: 13px;
+        cursor: pointer;
+        transition: border 0.2s ease;
+      }
+
+      .select-input:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .quantity-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--secondary);
+        border-radius: 8px;
+        padding: 4px;
+      }
+
+      .qty-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        background: var(--card);
+        color: var(--foreground);
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qty-btn:hover {
+        background: var(--muted);
+      }
+
+      .qty-display {
+        min-width: 32px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .add-to-cart-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, hsl(25, 95%, 60%), hsl(15, 90%, 55%));
+        color: var(--primary-foreground);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .add-to-cart-btn:hover {
+        opacity: 0.9;
+      }
+
+      .add-to-cart-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* ORDER SUMMARY */
+      .order-summary {
+        width: 380px;
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .order-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .order-header h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--foreground);
+      }
+
+      .order-badge {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+      }
+
+      .order-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 16px 0;
+      }
+
+      .order-items {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 16px;
+      }
+
+      .order-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 0;
+        color: var(--muted-foreground);
+        text-align: center;
+      }
+
+      .order-empty-icon {
+        width: 64px;
+        height: 64px;
+        background: var(--muted);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      .order-item {
+        padding: 12px;
+        background: var(--secondary);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .order-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 4px;
+      }
+
+      .order-item-name {
+        font-weight: 600;
+        color: var(--foreground);
+        font-size: 15px;
+      }
+
+      .order-item-price {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 15px;
+      }
+
+      .order-item-details {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        text-transform: capitalize;
+        margin-bottom: 4px;
+      }
+
+      .order-item-qty {
+        font-size: 13px;
+        color: var(--muted-foreground);
+      }
+
+      .order-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      .order-total-price {
+        color: var(--primary);
+      }
+
+      .order-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .order-btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .order-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-reset {
+        background: transparent;
+        border: 2px solid var(--destructive);
+        color: var(--destructive);
+      }
+
+      .btn-reset:hover:not(:disabled) {
+        background: var(--destructive);
+        color: white;
+      }
+
+      .btn-pay {
+        background: var(--success);
+        color: white;
+      }
+
+      .btn-pay:hover:not(:disabled) {
+        opacity: 0.9;
+      }
+
+      .qty-btn {
+        background-color: #ff914d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .qty-btn:hover {
+        background-color: #e06b2e;
+      }
+
+
+      /* MOBILE MENU */
+      .mobile-menu-btn {
+        display: none;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 50;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: var(--card);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        cursor: pointer;
+      }
+
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+      }
+
+      .overlay.active {
+        display: block;
+      }
+
+      /* TOAST NOTIFICATION */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--card);
+        color: var(--foreground);
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 100;
+        animation: slideIn 0.3s ease-out;
+        max-width: 320px;
+      }
+
+      .toast-success {
+        border-left: 4px solid var(--success);
+      }
+
+      .toast-info {
+        border-left: 4px solid var(--primary);
+      }
+
+      #searchInput:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 5px rgba(255, 145, 77, 0.4);
+      }
+
+
+      /* ANIMATIONS */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 1024px) {
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .main-content {
+          padding: 24px 16px;
+          padding-top: 80px;
+        }
+
+        .order-summary {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid var(--border);
+        }
+
+        .container {
+          flex-direction: column;
+        }
+
+        .products-grid {
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 16px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .products-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .content-header h1 {
+          font-size: 28px;
+        }
+
+        .toast {
+          right: 16px;
+          left: 16px;
+          bottom: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="mobile-menu-btn" id="menuToggle">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="container">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <h2>MENU</h2>
+        
+        <button class="category-btn active" data-category="coffee">
+          <svg class="category-icon" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2 21h18v-2H2v2zM20 8h-2V5h2c1.1 0 2 .9 2 2v9c0 1.1-.9 2-2 2h-2c-1.66 0-3-1.34-3-3V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 2.76 2.24 5 5 5h6c2.76 0 5-2.24 5-5v-2z"/>
+          </svg>
+          <span>Coffee</span>
+        </button>
+
+        <button class="category-btn" data-category="Pastries">
+          <svg class="category-icon" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C9.79 2 8 3.79 8 6c0 .73.19 1.41.54 2H6c-2.21 0-4 1.79-4 4v1c0 .55.45 1 1 1h2v6c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-6h2c.55 0 1-.45 1-1v-1c0-2.21-1.79-4-4-4h-2.54c.35-.59.54-1.27.54-2 0-2.21-1.79-4-4-4zm0 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/>
+          </svg>
+          <span>Pastry</span>
+        </button>
+
+        <div class="logout-container">
+      <button id="logoutBtn" class="logout-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Back
+      </button>
+  </div>
+
+
+      </aside>
+
+      <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="content-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h1 id="categoryTitle" style="margin: 0;">Coffee</h1>
+            <p style="margin: 4px 0 0;">Choose your favorite items</p>
+          </div>
+
+          <!-- 🔍 Search bar sa right side -->
+          <div>
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Search products..." 
+              style="
+                width: 220px;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                font-size: 14px;
+                outline: none;
+              "
+            />
+          </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid"></div>
+      </main>
+
+
+
+      <!-- ORDER SUMMARY -->
+      <aside class="order-summary">
+        <div class="order-header">
+          <h3>Your Order</h3>
+          <span class="order-badge" id="orderBadge" style="display: none;">0</span>
+        </div>
+        <div class="order-divider"></div>
+        <div class="order-items" id="orderItems">
+          <div class="order-empty">
+            <div class="order-empty-icon">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="4" width="22" height="16" rx="2" ry="200"></rect>
+                <line x1="6" y1="10" x2="23" y2="10"></line>
+              </svg>
+            </div>
+            <p>Your cart is empty</p>
+          </div>
+        </div>
+        <div class="order-divider"></div>
+        <div class="order-total">
+          <span>Total</span>
+          <span class="order-total-price" id="orderTotal">₱0.00</span>
+        </div>
+        <div class="order-actions">
+          <button class="order-btn btn-reset" id="resetBtn" disabled>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Reset
+          </button>
+          <button class="order-btn btn-pay" id="payBtn" disabled>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            Pay
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      let currentCategory = 'coffee';
+      let orderItems = [];
+      let quantities = {};
+
+      // DOM elements
+      const menuToggle = document.getElementById('menuToggle');
+      const overlay = document.getElementById('overlay');
+      const sidebar = document.getElementById('sidebar');
+      const categoryButtons = document.querySelectorAll('.category-btn');
+      const categoryTitle = document.getElementById('categoryTitle');
+      const productsGrid = document.getElementById('productsGrid');
+      const orderItemsContainer = document.getElementById('orderItems');
+      const orderBadge = document.getElementById('orderBadge');
+      const orderTotal = document.getElementById('orderTotal');
+      const resetBtn = document.getElementById('resetBtn');
+      const payBtn = document.getElementById('payBtn');
+
+      // Toggle mobile menu
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+      });
+
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+      });
+
+      // Category switching
+      categoryButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+    categoryButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCategory = btn.dataset.category;
+    categoryTitle.textContent = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
+    loadProducts(currentCategory); // pass category
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+});
+
+
+    document.getElementById("logoutBtn").addEventListener("click", function() {
+      window.location.href = "menu_page.php"; 
+  });
+
+
+
+      // Load products
+      async function loadProducts(category = "coffee") {
+    currentCategory = category;
+    productsGrid.innerHTML = "Loading...";
+
+    try {
+        const res = await fetch(`get_product.php?category=${category}`);
+        const data = await res.json();
+
+        console.log("Category:", category);
+        console.log("Products:", data.products); // DEBUG
+
+        if (!data.success || !data.products.length) {
+            productsGrid.innerHTML = "<p>No products found.</p>";
+            return;
+        }
+
+        productsGrid.innerHTML = "";
+        data.products.forEach(product => renderProductCard(product));
+    } catch (error) {
+        console.error("Error loading products:", error);
+        productsGrid.innerHTML = "<p>Error loading products.</p>";
+    }
+}
+
+function renderProductCard(product) {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.id = `product-card-${product.product_id}`;
+
+    const imgPath = product.photo;
+    const isCoffee = Number(product.is_coffee) === 1;
+
+    const isOutOfStock = Number(product.stock) <= 0;
+    const disabledAttr = isOutOfStock ? 'disabled' : '';
+
+    const coffeeOptionsHTML = isCoffee ? `
+        <div class="product-options">
+            <select class="select-input" id="size-${product.product_id}" onchange="updatePrice(${product.product_id}, ${product.price})" ${disabledAttr}>
+              <option value="0">Small</option>
+              <option value="10">Medium (+₱10)</option>
+              <option value="20">Large (+₱20)</option>
+            </select>
+            <select class="select-input" id="temp-${product.product_id}" ${disabledAttr}>
+              <option value="Hot">Hot</option>
+              <option value="Iced">Iced</option>
+            </select>
+        </div>
+    ` : "";
+
+    card.innerHTML = `
+      <div class="product-image-wrapper">
+        <img src="${imgPath}" alt="${product.name}" class="product-image">
+        ${isOutOfStock ? '<div class="product-overlay out-of-stock">Not Available</div>' : '<div class="product-overlay"></div>'}
+      </div>
+      <div class="product-details">
+        <h3 class="product-name">${product.name}</h3>
+        <div class="product-price" id="price-${product.product_id}">₱${parseFloat(product.price).toFixed(2)}</div>
+        ${coffeeOptionsHTML}
+        <div class="quantity-section">
+          <div class="quantity-controls">
+              <button class="qty-btn" onclick="updateQuantity(${product.product_id}, -1)" ${disabledAttr}>−</button>
+              <span class="qty-display" id="qty-${product.product_id}">0</span>
+              <button class="qty-btn" onclick="updateQuantity(${product.product_id}, 1)" ${disabledAttr}>+</button>
+          </div>
+          <button class="add-to-cart-btn" onclick="addToCart(${product.product_id}, '${product.name}', ${product.price}, ${isCoffee})" ${disabledAttr} id="addBtn-${product.product_id}">
+            ${isOutOfStock ? "Out of Stock" : "Add"}
+          </button>
+        </div> 
+      </div>
+    `;
+
+    productsGrid.appendChild(card);
+}
+
+
+
+
+      // Update quantity
+      function updateQuantity(id, change) {
+        quantities[id] = Math.max(0, (quantities[id] || 0) + change);
+        document.getElementById(`qty-${id}`).textContent = quantities[id];
+        document.getElementById(`addBtn-${id}`).disabled = quantities[id] === 0;
+      }
+
+      // Update price for coffee sizes
+      function updatePrice(id, basePrice) {
+        const sizeSelect = document.getElementById(`size-${id}`);
+        const sizePrice = parseFloat(sizeSelect.value);
+        const finalPrice = basePrice + sizePrice;
+        document.getElementById(`price-${id}`).textContent = `₱${finalPrice.toFixed(2)}`;
+      }
+
+      // Add to cart
+    function addToCart(id, name, basePrice, isCoffee) {
+    const quantity = quantities[id];
+    if (quantity === 0) return;
+
+    let finalPrice = basePrice;
+    let size = null;
+    let temp = null;
+
+    if (isCoffee) {
+        const sizeSelect = document.getElementById(`size-${id}`);
+        const tempSelect = document.getElementById(`temp-${id}`);
+        const sizePrice = parseFloat(sizeSelect.value);
+        finalPrice += sizePrice;
+        size = sizeSelect.options[sizeSelect.selectedIndex].text.split(' ')[0].toLowerCase();
+        temp = tempSelect.value;
+    }
+
+    const existingIndex = orderItems.findIndex(item => 
+        item.id === id && item.size === size && item.temp === temp
+    );
+
+    if (existingIndex > -1) {
+        orderItems[existingIndex].quantity += quantity;
+    } else {
+        orderItems.push({ id, name, price: finalPrice, quantity, size, temp });
+    }
+
+    quantities[id] = 0;
+    document.getElementById(`qty-${id}`).textContent = '0';
+    document.getElementById(`addBtn-${id}`).disabled = true;
+
+    updateOrderSummary();
+    showToast(`Added ${quantity} ${name} to cart!`, 'success');
+}
+
+
+      // Update order summary
+      function updateOrderSummary() {
+    if (orderItems.length === 0) {
+        orderItemsContainer.innerHTML = `
+            <div class="order-empty">
+                <div class="order-empty-icon">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                <p>Your cart is empty</p>
+            </div>
+        `;
+        orderBadge.style.display = 'none';
+        resetBtn.disabled = true;
+        payBtn.disabled = true;
+    } else {
+        orderItemsContainer.innerHTML = orderItems.map((item, index) => `
+            <div class="order-item">
+                <div class="order-item-header">
+                    <span class="order-item-name">${item.name}</span>
+                    <span class="order-item-price">₱${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+                ${item.size ? `<div class="order-item-details">${item.size}, ${item.temp}</div>` : ''}
+
+                <div class="order-item-qty" style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                    <button class="qty-btn" onclick="changeQty(${index}, -1)">–</button>
+                    <span>Qty: ${item.quantity} × ₱${item.price.toFixed(2)}</span>
+                    <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                </div>
+
+                <button class="order-btn btn-reset" style="margin-top:8px; padding:6px 10px; font-size:12px;"
+                        onclick="removeItem(${index})">
+                    Remove
+                </button>
+            </div>
+        `).join('');
+
+        orderBadge.textContent = orderItems.length;
+        orderBadge.style.display = 'block';
+        resetBtn.disabled = false;
+        payBtn.disabled = false;
+    }
+
+    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    orderTotal.textContent = `₱${total.toFixed(2)}`;
+
+    // 🔥 Save to localStorage so checkout page can read it
+    localStorage.setItem('currentOrder', JSON.stringify(orderItems));
+}
+
+
+      function updatePayButtonState() {
+        const payBtn = document.getElementById("payBtn");
+        payBtn.disabled = cart.length === 0; // Enable only if may laman ang cart
+      }
+
+
+
+      function removeItem(index) {
+        const removed = orderItems.splice(index, 1)[0];
+        updateOrderSummary();
+        showToast(`${removed.name} removed from cart`, 'info');
+      }
+
+      function changeQty(index, delta) {
+        const item = orderItems[index];
+        item.quantity += delta;
+
+        if (item.quantity <= 0) {
+          removeItem(index);
+        } else {
+          updateOrderSummary();
+        }
+      }
+      // Reset order
+      resetBtn.addEventListener('click', () => {
+        orderItems = [];
+        quantities = {};
+        updateOrderSummary();
+        loadProducts();
+        showToast('Cart has been cleared', 'info');
+      });
+
+      // Pay
+      payBtn.addEventListener('click', () => {
+  // Save cart to localStorage
+  localStorage.setItem('cartItems', JSON.stringify(orderItems));
+
+  // Redirect to checkout page
+  window.location.href = 'checkout.html';
+});
+
+      // Toast notification
+      function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            ${type === 'success' ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>' : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>'}
+          </svg>
+          <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      document.getElementById("payBtn").addEventListener("click", function () {
+        window.location.href = "checkout.html";
+      });
+
+      // Enable redirect to checkout
+  document.getElementById("payBtn").addEventListener("click", function () {
+    if (cart.length === 0) {
+      alert("No items in cart!");
+      return;
+    }
+    window.location.href = "checkout.html";
+  });
+
+    // SEARCH FUNCTION
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const query = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+
+    productCards.forEach(card => {
+      const name = card.querySelector('.product-name').textContent.toLowerCase();
+      card.style.display = name.includes(query) ? 'block' : 'none';
+    });
+  });
+
+
+      // Initialize
+      loadProducts();
+    </script>
+  </body>
+  </html>

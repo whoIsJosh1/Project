@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Section</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    /* Grid layout */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 40px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    /* Glass box style */
+    .glass-box {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+      position: relative;
+      height: 700px; /* adjustable height of slideshow */
+    }
+
+    /* Slideshow inside box */
+    .slideshow-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .slides {
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Label text */
+    .box-title {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.5);
+      padding: 5px 15px;
+      border-radius: 8px;
+      color: white;
+      font-size: 18px;
+    }
+
+    /* Description box */
+    .desc-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ff914d;
+      font-size: 20px;
+      line-height: 1.6;
+      background-color: white;
+      border-radius: 12px;
+      padding: 20px;
+      font-family:Times;
+      font-weight: bolder;
+    }
+    /* Coffee box */
+    .coffee-box {
+    transform: rotate(3deg); /* slight tilt left */
+    transition: transform 0.4s ease;
+    }
+    .coffee-box:hover {
+    transform: rotate(0deg) scale(1.02); /* straighten + zoom on hover */
+    }
+
+    /* Pastry box */
+    .pastry-box {
+    transform: rotate(-3deg); /* slight tilt right */
+    transition: transform 0.4s ease;
+    }
+    .pastry-box:hover {
+    transform: rotate(0deg) scale(1.02); /* straighten + zoom on hover */
+    }
+
+    /* Responsive layout */
+    @media (max-width: 900px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .glass-box,
+      .desc-box {
+        height: auto;
+      }
+      
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-grid">
+    <!-- Coffee box -->
+    <div class="glass-box coffee-box">
+      <div class="slideshow-container" id="coffee-slideshow">
+        <img class="slides" src="ex1_coffee.jpg" alt="Coffee 1">
+        <img class="slides" src="ex1_coffee.jpg" alt="Coffee 2">
+        <img class="slides" src="ex1_coffee.jpg" alt="Coffee 3">
+        <div class="box-title">Coffee</div>
+      </div>
+    </div>
+    <div class="desc-box">
+      <p>    
+        Discover our freshly brewed coffee made from hand-selected beans. 
+        Rich aroma, smooth taste, and the perfect energy boost for your day.
+      </p>
+    </div>
+
+    <!-- Pastry box -->
+    <div class="desc-box">
+      <p>    
+        Indulge in our delightful pastries, baked fresh daily. 
+        From flaky croissants to sweet treats, they pair perfectly with your coffee.
+      </p>
+    </div>
+    <div class="glass-box pastry-box">
+      <div class="slideshow-container" id="pastry-slideshow">
+        <img class="slides" src="ex1_pastry.jpg" alt="Pastry 1">
+        <img class="slides" src="ex1_pastry.jpg" alt="Pastry 2">
+        <img class="slides" src="ex1_pastry.jpg" alt="Pastry 3">
+        <div class="box-title">Pastries</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function runSlideshow(containerId, interval = 3000) {
+      let index = 0;
+      const slides = document.querySelectorAll(`#${containerId} .slides`);
+      function showSlides() {
+        slides.forEach(slide => slide.style.display = "none");
+        index = (index + 1 > slides.length) ? 1 : index + 1;
+        slides[index - 1].style.display = "block";
+        setTimeout(showSlides, interval);
+      }
+      showSlides();
+    }
+
+    // Start slideshows
+    runSlideshow("coffee-slideshow", 3000);
+    runSlideshow("pastry-slideshow", 4000);
+  </script>
+</body>
+</html>

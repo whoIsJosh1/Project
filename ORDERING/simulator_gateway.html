@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fake Payment Simulator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #d1eaff, #f9f9f9);
+      margin: 0;
+    }
+
+    .simulator-box {
+      background: #fff;
+      padding: 40px;
+      width: 400px;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #0078ff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #005fcc;
+    }
+
+    .success {
+      display: none;
+    }
+
+    .success h3 {
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+
+    .success p {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="simulator-box" id="paymentForm">
+    <h2>💳 Payment Simulator</h2>
+    <p>Enter any details below to simulate a payment.</p>
+    <input type="text" placeholder="Account Number" required>
+    <input type="text" placeholder="Account Name" required>
+
+    <button onclick="simulatePayment()">Process Payment</button>
+  </div>
+
+  <div class="simulator-box success" id="successMessage">
+    <h3>✅ Payment Successful!</h3>
+    <p>Thank you for using our demo gateway.</p>
+    <button onclick="closes()">Close</button>
+  </div>
+
+  <script>
+    function simulatePayment() {
+      const form = document.getElementById('paymentForm');
+      const success = document.getElementById('successMessage');
+
+      form.style.display = 'none';
+      success.style.display = 'block';
+    }
+
+    function closes() {
+        window.close("checkout.html");
+        window.open("successfulEpay.html?method=cash", "_blank");
+        window.opener.postMessage('payment_done', '*'); // notify checkout page
+window.close(); // close the simulator window
+        
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Receipt</title>
+  <style>
+    :root{
+      --paper-width: 380px; /* adjust for thermal/regular */
+      --accent: #222;
+      --muted: #666;
+      --mono: 'Courier New', monospace;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display:flex;
+      gap:20px;
+      align-items:flex-start;
+      padding:20px;
+      background:#f3f4f6;
+    }
+
+    /* Receipt container */
+    .receipt-wrap{
+      width:var(--paper-width);
+      background:#fff;
+      padding:18px;
+      border-radius:8px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .receipt-head{ text-align:center; margin-bottom:10px; }
+    .store-name{ font-weight:700; font-size:1.05rem; color:var(--accent); }
+    .store-meta{ color:var(--muted); font-size:0.85rem; }
+
+    .meta-row{ display:flex; justify-content:space-between; font-size:0.85rem; margin:8px 0; }
+    .items{ width:100%; border-collapse:collapse; margin-top:6px; }
+    .items th, .items td{
+      text-align:left; padding:6px 0; font-size:0.9rem;
+    }
+    .items th{ font-size:0.85rem; color:var(--muted); font-weight:600; letter-spacing:0.3px; }
+
+    .item-name{ font-weight:600; }
+    .qty, .price, .line-total{ text-align:right; }
+
+    .divider{ border-top:1px dashed #ddd; margin:8px 0; }
+
+    .totals{ margin-top:8px; font-size:0.95rem; }
+    .totals .row{ display:flex; justify-content:space-between; padding:4px 0; }
+    .grand{ font-weight:800; font-size:1.05rem; }
+
+    .footer{ text-align:center; margin-top:12px; color:var(--muted); font-size:0.82rem; }
+
+    /* Controls area (for demo) */
+    .controls{
+      min-width:300px;
+    }
+    .controls button{
+      display:block; width:100%; padding:10px; margin-bottom:8px; border:0; border-radius:6px;
+      cursor:pointer; background:#111; color:#fff; font-weight:600;
+    }
+    .controls textarea{ width:100%; height:220px; font-family:var(--mono); padding:8px; box-sizing:border-box; }
+
+    /* Print adjustments */
+    @media print{
+      body{ background: #fff; }
+      .controls{ display:none; }
+      .receipt-wrap{ box-shadow:none; border-radius:0; width: auto; margin:0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="receipt-wrap" id="receipt">
+    <div class="receipt-head">
+      <div class="store-name" id="storeName">Cafe Good Day</div>
+      <div class="store-meta" id="storeAddr">123 Sample St., City • TIN: 123-456-789</div>
+    </div>
+
+    <div class="meta-row">
+      <div>Receipt #: <strong id="receiptNo">—</strong></div>
+      <div id="dateTime">—</div>
+    </div>
+
+    <table class="items" id="itemsTable" aria-label="items">
+      <thead>
+        <tr><th style="width:56%;">Item</th><th style="width:12%;">Qty</th><th style="width:16%;">Price</th><th style="width:16%;">Total</th></tr>
+      </thead>
+      <tbody id="itemsBody">
+        <!-- JS will populate -->
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="totals">
+      <div class="row"><div>Subtotal</div><div id="subtotal">₱0.00</div></div>
+      <div class="row"><div>Tax (10%)</div><div id="tax">₱0.00</div></div>
+      <div class="row grand"><div>Total</div><div id="total">₱0.00</div></div>
+    </div>
+
+    <div class="footer">
+      <div>Thank you for your purchase!</div>
+      <div id="footerNote">Powered by your App</div>
+    </div>
+  </div>
+
+  <!-- Controls for demo (you can remove in production) -->
+  <div class="controls" aria-hidden="false">
+    <button id="fillDemo">Generate demo receipt</button>
+    <button id="printBtn">Print / Save as PDF</button>
+    <button id="clearBtn" style="background:#e53e3e">Clear</button>
+    <label style="font-size:0.85rem; color:#444; margin-top:6px; display:block;">Receipt JSON (editable):</label>
+    <textarea id="jsonIn"></textarea>
+    <small style="color:var(--muted); display:block; margin-top:6px;">Edit JSON then press <strong>Generate demo receipt</strong>.</small>
+  </div>
+
+  <script>
+    // Example data structure
+    const sampleData = {
+      store: {
+        name: "Cafe Good Day",
+        address: "123 Sample St., City • TIN: 123-456-789",
+        note: "Visit again!"
+      },
+      items: [
+        { name: "Cappuccino", qty: 1, price: 120.00 },
+        { name: "Ham Sandwich", qty: 2, price: 95.50 },
+        { name: "Bottled Water", qty: 1, price: 35.00 }
+      ],
+      taxRate: 0.10
+    };
+
+    // Utils
+    function formatCurrency(n){
+      // Philippines peso formatting (you can change locale)
+      return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(n);
+    }
+
+    function generateReceiptNumber(){
+      // simple receipt id: date + random
+      const d = new Date();
+      const y = d.getFullYear().toString().slice(-2);
+      const mo = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const rand = Math.floor(Math.random()*9000)+1000;
+      return `${y}${mo}${day}-${rand}`;
+    }
+
+    function renderReceipt(data){
+      // header
+      document.getElementById('storeName').textContent = data.store.name || '';
+      document.getElementById('storeAddr').textContent = data.store.address || '';
+
+      // meta
+      document.getElementById('receiptNo').textContent = generateReceiptNumber();
+      document.getElementById('dateTime').textContent = (new Date()).toLocaleString();
+
+      // items
+      const tbody = document.getElementById('itemsBody');
+      tbody.innerHTML = '';
+      let subtotal = 0;
+      (data.items || []).forEach(it => {
+        const line = (it.qty||0) * (it.price||0);
+        subtotal += line;
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.innerHTML = `<div class="item-name">${escapeHtml(it.name)}</div>`;
+        tr.appendChild(tdName);
+
+        const tdQty = document.createElement('td'); tdQty.className='qty'; tdQty.textContent = it.qty; tr.appendChild(tdQty);
+        const tdPrice = document.createElement('td'); tdPrice.className='price'; tdPrice.textContent = formatCurrency(it.price); tr.appendChild(tdPrice);
+        const tdLine = document.createElement('td'); tdLine.className='line-total'; tdLine.textContent = formatCurrency(line); tr.appendChild(tdLine);
+
+        tbody.appendChild(tr);
+      });
+
+      // totals
+      const tax = subtotal * (data.taxRate || 0);
+      const total = subtotal + tax;
+      document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('tax').textContent = formatCurrency(tax);
+      document.getElementById('total').textContent = formatCurrency(total);
+
+      // footer
+      document.getElementById('footerNote').textContent = data.store.note || '';
+    }
+
+    // small helper to prevent XSS when inserting text
+    function escapeHtml(unsafe) {
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    // Hook buttons
+    document.getElementById('fillDemo').addEventListener('click', () => {
+      // If JSON present parse and use, otherwise use sample
+      const txt = document.getElementById('jsonIn').value.trim();
+      let data;
+      if(txt){
+        try{
+          data = JSON.parse(txt);
+        }catch(e){
+          alert('Invalid JSON — check syntax.');
+          return;
+        }
+      }else data = sampleData;
+      renderReceipt(data);
+    });
+
+    document.getElementById('printBtn').addEventListener('click', () => {
+      window.print(); // use browser print dialog (Save as PDF)
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('itemsBody').innerHTML = '';
+      document.getElementById('subtotal').textContent = '₱0.00';
+      document.getElementById('tax').textContent = '₱0.00';
+      document.getElementById('total').textContent = '₱0.00';
+      document.getElementById('receiptNo').textContent = '—';
+      document.getElementById('dateTime').textContent = '—';
+      document.getElementById('storeName').textContent = '';
+      document.getElementById('storeAddr').textContent = '';
+    });
+
+    // seed sample JSON into textarea
+    document.getElementById('jsonIn').value = JSON.stringify(sampleData, null, 2);
+
+    // auto-generate on load for convenience
+    renderReceipt(sampleData);
+  </script>
+</body>
+</html>

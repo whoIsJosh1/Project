@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Success</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 34px;
+      color: #333;
+      margin-bottom: 10px;
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      font-size: 28px;
+      color: #ff7b3d;
+      margin-top: 10px;
+      animation: fadeIn 1.2s ease;
+    }
+
+    .checkmark {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 8px solid #4CAF50;
+      position: relative;
+      animation: pop 0.6s ease forwards;
+    }
+
+    .checkmark::after {
+      content: "";
+      position: absolute;
+      width: 45px;
+      height: 90px;
+      border-right: 8px solid #4CAF50;
+      border-bottom: 8px solid #4CAF50;
+      transform: rotate(45deg) scale(0);
+      opacity: 0;
+      animation: draw 0.8s ease forwards;
+      animation-delay: 0.6s;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes draw {
+      0% { transform: rotate(45deg) scale(0); opacity: 0; }
+      100% { transform: rotate(45deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    p {
+      margin-top: 15px;
+      font-size: 20px;
+      color: #555;
+      animation: fadeIn 1.2s ease;
+    }
+
+    button {
+      background-color: #ff914d;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      margin-top: 25px;
+    }
+
+    button:hover {
+      background-color: #ff7b3d;
+    }
+  </style>
+</head>
+<body>
+  <h1>Orders Complete</h1>
+  <div class="checkmark"></div>
+  <h2>Your Order Number is <span id="orderNum"></span></h2>
+  <p>Thank you for your order.</p>
+  <button onclick="backMenu()">⬅ Back to Menu</button>
+
+ 
+
+
+
+
+<script>
+   
+    function backMenu() {
+      window.location.href = 'menu_page.php';
+    }
+  const qNum = localStorage.getItem('queue_number');
+  const cName = localStorage.getItem('customer_name') || 'Guest Customer';
+  if (qNum) {
+      document.getElementById('orderNum').textContent = localStorage.getItem('queue_number') || 'N/A';
+  } else {
+      document.getElementById('orderNumber').textContent = "Order not found.";
+  }
+</script>
+
+</script>
+
+</body>
+</html>

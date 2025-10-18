@@ -1,0 +1,18 @@
+Array
+(
+    [order] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 47
+                    [name] => Caramel Macchiato
+                    [price] => 200
+                    [quantity] => 1
+                    [size] => small
+                    [temp] => Hot
+                )
+
+        )
+
+    [payment_method] => Cash
+)

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Menu</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #ff914d;
+      margin-bottom: 20px;
+      font-size: 32px;
+      letter-spacing: 2px;
+    }
+
+    /* Coffee grid */
+    .coffee-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    /* Coffee card */
+    .coffee-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 145, 77, 0.3);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.4s ease;
+      height: 400px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .coffee-card:hover {
+      transform: scale(1.03);
+    }
+
+    /* Slideshow inside card */
+    .slideshow-container {
+      width: 100%;
+      height: 60%;
+      position: relative;
+    }
+
+    .slides {
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ff914d;
+      margin: 10px 0;
+    }
+
+    .card-desc {
+      text-align: center;
+      padding: 0 10px 10px;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: block;
+      width: 80%;
+      margin: 10px auto 15px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff914d;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #e6833c;
+      transform: scale(1.05);
+    }
+
+    /* Back button */
+    .back-btn {
+      align-self: flex-start;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff914d;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background-color: #e6833c;
+      transform: scale(1.05);
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .coffee-card {
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="menu_page.php" class="back-btn">⬅ Back to Menu</a>
+
+  <h1>Our Coffee Selection</h1>
+  <div class="coffee-grid">
+    <!-- Coffee Card 1 -->
+    <div class="coffee-card">
+      <div class="slideshow-container" id="coffee1-slideshow">
+        <img class="slides" src="coffee1_1.jpg" alt="Espresso 1">
+        <img class="slides" src="coffee1_2.jpg" alt="Espresso 2">
+        <img class="slides" src="coffee1_3.jpg" alt="Espresso 3">
+      </div>
+      <div class="card-title">Espresso</div>
+      <div class="card-desc">Rich and strong espresso, perfect to start your day.</div>
+      <a href="#" class="btn">Order Now</a>
+    </div>
+
+    <!-- Coffee Card 2 -->
+    <div class="coffee-card">
+      <div class="slideshow-container" id="coffee2-slideshow">
+        <img class="slides" src="coffee2_1.jpg" alt="Cappuccino 1">
+        <img class="slides" src="coffee2_2.jpg" alt="Cappuccino 2">
+        <img class="slides" src="coffee2_3.jpg" alt="Cappuccino 3">
+      </div>
+      <div class="card-title">Cappuccino</div>
+      <div class="card-desc">Creamy cappuccino with a perfect foam layer.</div>
+      <a href="#" class="btn">Order Now</a>
+    </div>
+
+    <!-- Coffee Card 3 -->
+    <div class="coffee-card">
+      <div class="slideshow-container" id="coffee3-slideshow">
+        <img class="slides" src="coffee3_1.jpg" alt="Latte 1">
+        <img class="slides" src="coffee3_2.jpg" alt="Latte 2">
+        <img class="slides" src="coffee3_3.jpg" alt="Latte 3">
+      </div>
+      <div class="card-title">Latte</div>
+      <div class="card-desc">Smooth and mild latte with rich aroma.</div>
+      <a href="#" class="btn">Order Now</a>
+    </div>
+  </div>
+
+  <script>
+    function runSlideshow(containerId, interval = 3000) {
+      let index = 0;
+      const slides = document.querySelectorAll(`#${containerId} .slides`);
+      function showSlides() {
+        slides.forEach(slide => slide.style.display = "none");
+        index = (index + 1 > slides.length) ? 1 : index + 1;
+        slides[index - 1].style.display = "block";
+        setTimeout(showSlides, interval);
+      }
+      showSlides();
+    }
+
+    // Start all slideshows
+    runSlideshow("coffee1-slideshow", 3000);
+    runSlideshow("coffee2-slideshow", 3000);
+    runSlideshow("coffee3-slideshow", 3000);
+  </script>
+</body>
+</html>
